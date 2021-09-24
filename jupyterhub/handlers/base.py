@@ -600,7 +600,9 @@ class BaseHandler(RequestHandler):
             self.set_service_cookie(user)
 
         if not self.get_session_cookie():
-            self.set_session_cookie()
+            s = self.set_session_cookie()
+            self.log.warning("session uuid: {msg}".format(msg = s))
+        self.log.warning("session cookie: {msg}".format(msg = str(self.get_session_cookie())))
 
         # create and set a new cookie token for the hub
         if not self.get_current_user_cookie():
