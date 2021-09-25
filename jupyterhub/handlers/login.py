@@ -109,7 +109,8 @@ class LoginHandler(BaseHandler):
             **context,
             custom_html=custom_html,
         )
-
+    """
+    # tan@bioturing.com notes: remove the GET route. We have our custom login route
     async def get(self):
         self.statsd.incr('login.request')
         user = self.current_user
@@ -140,7 +141,7 @@ class LoginHandler(BaseHandler):
                 return
             username = self.get_argument('username', default='')
             self.finish(await self._render(username=username))
-
+    """
     async def post(self):
         # parse the arguments dict
         data = {}
@@ -165,4 +166,4 @@ class LoginHandler(BaseHandler):
 # /login renders the login page or the "Login with..." link,
 # so it should always be registered.
 # /logout clears cookies.
-default_handlers = [(r"/loginsso", LoginHandler), (r"/logout", LogoutHandler)]
+default_handlers = [(r"/login", LoginHandler), (r"/logout", LogoutHandler)]

@@ -111,7 +111,11 @@ from .objects import Hub, Server
 # For faking stats
 from .emptyclass import EmptyClass
 
-DEFAULT_ROUTESPEC_HUB = "hub/"
+"""
+tan@bioturing.com notes:
+    If I want to customize which routes should go to the jupyterhub instance, I would go here
+"""
+DEFAULT_ROUTESPEC_HUB = ""
 
 common_aliases = {
     'log-level': 'Application.log_level',
@@ -2568,7 +2572,7 @@ class JupyterHub(Application):
             GET -> proxy to our custom login page
             POST -> to our custom authenticator (bioturingauth)
         """
-        login_url = url_path_join(base_url, 'login') 
+        login_url = url_path_join(self.base_url, 'sso') 
         logout_url = self.authenticator.logout_url(base_url)
 
         # if running from git, disable caching of require.js

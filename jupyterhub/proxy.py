@@ -351,7 +351,6 @@ class Proxy(LoggingConfigurable):
 
         good_routes = {self.app.hub.routespec}
         good_routes.add(SSO_LOGIN_PREFIX + "/")
-        good_routes.add("/hub/login/")
 
         hub = self.hub
         if self.app.hub.routespec not in routes:
@@ -736,7 +735,6 @@ class ConfigurableHTTPProxy(Proxy):
         # Adding custom route for sso
         await self.add_route(SSO_LOGIN_PREFIX, SSO_LOGIN_PROXY, None)
         # Adding custom route for hub/login
-        await self.add_route("/hub/login", SSO_LOGIN_PROXY + "/sso" , None)
         all_routes = await self.get_all_routes()
         print("Get all routes after importing the sso.", all_routes)
 
