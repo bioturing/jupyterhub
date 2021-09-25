@@ -253,7 +253,7 @@ class HubAuth(SingletonConfigurable):
 
     @default('login_url')
     def _default_login_url(self):
-        return self.hub_host + url_path_join(self.hub_prefix, 'login')
+        return self.hub_host + url_path_join(self.hub_prefix, 'loginsso')
 
     keyfile = Unicode(
         os.getenv('JUPYTERHUB_SSL_KEYFILE', ''),

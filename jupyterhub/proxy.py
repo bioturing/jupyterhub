@@ -49,7 +49,7 @@ from .utils import url_path_join
 from jupyterhub.traitlets import Command
 
 SSO_LOGIN_PREFIX="/sso"
-SSO_LOGIN_REDIRECT="http://127.0.0.1:3000"
+SSO_LOGIN_PROXY="http://127.0.0.1:3000"
 
 def _one_at_a_time(method):
     """decorator to limit an async method to be called only once
@@ -351,6 +351,7 @@ class Proxy(LoggingConfigurable):
 
         good_routes = {self.app.hub.routespec}
         good_routes.add(SSO_LOGIN_PREFIX + "/")
+        good_routes.add("/hub/login/")
 
         hub = self.hub
         if self.app.hub.routespec not in routes:
@@ -732,7 +733,10 @@ class ConfigurableHTTPProxy(Proxy):
         pc = PeriodicCallback(self.check_running, 1e3 * self.check_running_interval)
         self._check_running_callback = pc
         pc.start()
-        await self.add_route(SSO_LOGIN_PREFIX, SSO_LOGIN_REDIRECT, None)
+        # Adding custom route for sso
+        await self.add_route(SSO_LOGIN_PREFIX, SSO_LOGIN_PROXY, None)
+        # Adding custom route for hub/login
+        await self.add_route("/hub/login", SSO_LOGIN_PROXY + "/sso" , None)
         all_routes = await self.get_all_routes()
         print("Get all routes after importing the sso.", all_routes)
 

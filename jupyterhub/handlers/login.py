@@ -165,4 +165,4 @@ class LoginHandler(BaseHandler):
 # /login renders the login page or the "Login with..." link,
 # so it should always be registered.
 # /logout clears cookies.
-default_handlers = [(r"/login", LoginHandler), (r"/logout", LogoutHandler)]
+default_handlers = [(r"/loginsso", LoginHandler), (r"/logout", LogoutHandler)]

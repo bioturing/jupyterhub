@@ -111,6 +111,8 @@ from .objects import Hub, Server
 # For faking stats
 from .emptyclass import EmptyClass
 
+DEFAULT_ROUTESPEC_HUB = "hub/"
+
 common_aliases = {
     'log-level': 'Application.log_level',
     'f': 'JupyterHub.config_file',
@@ -919,9 +921,9 @@ class JupyterHub(Application):
         # use `/` with host-based routing so the Hub
         # gets requests for all hosts
         if self.subdomain_host:
-            routespec = '/'
+            routespec = '/' + DEFAULT_ROUTESPEC_HUB 
         else:
-            routespec = self.base_url
+            routespec = self.base_url.rstrip("/") + "/" + DEFAULT_ROUTESPEC_HUB
         return routespec
 
     @validate("hub_routespec")
@@ -2557,7 +2559,16 @@ class JupyterHub(Application):
         del jinja_options['enable_async']
         jinja_env_sync = Environment(loader=loader, **jinja_options)
 
-        login_url = url_path_join(base_url, 'login')
+        """
+        tan@bioturing.com notes:
+            This setting is cool.
+            The LogoutHandler use the login_url in this setting to redirect users when they logout
+            We keep this url is /login. And modify the url in LoginHandler to /loginsso
+            So we can separate GET and POST login API
+            GET -> proxy to our custom login page
+            POST -> to our custom authenticator (bioturingauth)
+        """
+        login_url = url_path_join(base_url, 'login') 
         logout_url = self.authenticator.logout_url(base_url)
 
         # if running from git, disable caching of require.js
@@ -2596,7 +2607,7 @@ class JupyterHub(Application):
             cookie_secret=self.cookie_secret,
             cookie_max_age_days=self.cookie_max_age_days,
             redirect_to_server=self.redirect_to_server,
-            login_url=login_url,
+            login_url=login_url, 
             logout_url=logout_url,
             static_path=os.path.join(self.data_files_path, 'static'),
             static_url_prefix=url_path_join(self.hub.base_url, 'static/'),

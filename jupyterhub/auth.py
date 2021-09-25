@@ -685,6 +685,12 @@ class Authenticator(LoggingConfigurable):
         Returns:
             str: The login URL, e.g. '/hub/login'
         """
+        """
+        tan@bioturing.com note:
+            When login failed -> redirect to this url
+            This url must be different to the POST login url. So we can separate the GET and the POST api
+            That will be easier to proxy those request.
+        """
         return url_path_join(base_url, 'login')
 
     def logout_url(self, base_url):
