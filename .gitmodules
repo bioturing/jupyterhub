@@ -1,0 +1,9 @@
+[submodule "zero-to-jupyterhub-k8s"]
+	path = zero-to-jupyterhub-k8s
+	url = ./zero-to-jupyterhub-k8s/
+[submodule "bioturingauth"]
+	path = bioturingauth
+	url = ./bioturingauth/
+[submodule "configurable-http-proxy"]
+	path = configurable-http-proxy
+	url = ./configurable-http-proxy

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-overlay-mounts
+  labels:
+    app: test-me
+spec:
+  selector:
+    matchLabels:
+      app: test-me
+  template:
+    metadata:
+      labels:
+        app: test-me          
+    spec:            
+      containers:
+      - securityContext:
+          privileged: true
+        image: ubuntu:18.04
+        name: setup
+        command: [ "/bin/bash", "-c", "--" ]
+        args:
+        - mkdir -p /data/{upper,work}; 
+          mount -t overlay -o lowerdir=/root_dir/Tom,upperdir=/data/upper,workdir=/data/work overlay /opt/provision; 
+          touch /opt/provision/setup_complete; 
+          tail -f /dev/null;
+        volumeMounts:
+        - mountPath: /root_dir
+          name: local-vol
+          readOnly: true
+        - mountPath: /data
+          name: overlay
+        - mountPath: /opt/provision
+          name: provision-mount
+          mountPropagation: Bidirectional
+        lifecycle:
+          preStop:
+            exec:
+              command: ["umount", "/opt/provision"]
+      - image: ubuntu:18.04 # jupyterlab
+        name: run
+        command: [ "tail", "-f", "/dev/null" ]
+        volumeMounts:
+        - mountPath: /opt/provision
+          name: provision-mount
+          readOnly: true
+        readinessProbe:
+          exec:
+            command:
+            - cat
+            - /opt/provision/setup_complete
+          initialDelaySeconds: 0
+          periodSeconds: 1
+          failureThreshold: 300
+      volumes:
+      - name: local-vol
+        hostPath: 
+          path: /mnt/hdd3/tan/tmp_data
+      - name: overlay
+        emptyDir: {}
+      - name: provision-mount
+        emptyDir: {}

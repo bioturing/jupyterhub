@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: jupyter-ingress
+  annotations:
+    app: jupyter-ingress
+    kubernetes.io/ingress.class: "nginx"
+      #nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+spec:
+  tls:
+    - hosts:
+      - dev.bioturing.com
+      secretName: tls-secret
+  rules:
+    - host: dev.bioturing.com
+      http:
+        paths:
+        - path: /jupyterhub(/|$)(.*)
+          backend:
+            serviceName: proxy-public
+            servicePort: 80

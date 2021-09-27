@@ -48,9 +48,6 @@ from .utils import exponential_backoff
 from .utils import url_path_join
 from jupyterhub.traitlets import Command
 
-SSO_LOGIN_PREFIX="/sso"
-SSO_LOGIN_PROXY="http://127.0.0.1:3000"
-
 def _one_at_a_time(method):
     """decorator to limit an async method to be called only once
 
@@ -349,8 +346,12 @@ class Proxy(LoggingConfigurable):
         user_routes = {path for path, r in routes.items() if 'user' in r['data']}
         futures = []
 
+        """
+        Note from tan@bioturing.com:
+            You should put any additional route here to be a good route
+            Otherwise it will be deleted
+        """
         good_routes = {self.app.hub.routespec}
-        good_routes.add(SSO_LOGIN_PREFIX + "/")
 
         hub = self.hub
         if self.app.hub.routespec not in routes:
@@ -732,11 +733,8 @@ class ConfigurableHTTPProxy(Proxy):
         pc = PeriodicCallback(self.check_running, 1e3 * self.check_running_interval)
         self._check_running_callback = pc
         pc.start()
-        # Adding custom route for sso
-        await self.add_route(SSO_LOGIN_PREFIX, SSO_LOGIN_PROXY, None)
         # Adding custom route for hub/login
         all_routes = await self.get_all_routes()
-        print("Get all routes after importing the sso.", all_routes)
 
     def _terminate_win(self, pid):
         # On Windows we spawned a shell on Popen, so we need to
