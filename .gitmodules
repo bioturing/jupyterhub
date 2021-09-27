@@ -7,3 +7,5 @@
 [submodule "configurable-http-proxy"]
 	path = configurable-http-proxy
 	url = ./configurable-http-proxy
+[submodule "./bioturingauth"]
+	url = git@github.com:bioturing/jupyterhub
