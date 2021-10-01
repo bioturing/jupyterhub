@@ -9,19 +9,16 @@ to enable testing without administrative privileges.
 
 c.JupyterHub.authenticator_class = 'bioturingauth.auth.BioTuringAuthenticator'
 
+# Optionally set a global password that all users must use
+# c.DummyAuthenticator.password = "your_password"
+
+#from jupyterhub.spawner import SimpleLocalProcessSpawner
+
+#c.JupyterHub.spawner_class = SimpleLocalProcessSpawner
 c.Spawner.args = ['--NotebookApp.allow_origin=*']
 c.Spawner.default_url = '/lab'
-c.KubeSpawner.profile_list = [
-			{
-                    'display_name': 'Training Env - Datascience',
-                    'slug': 'training-datascience',
-                    'kubespawner_override': {
-                        'image': 'jupyter/datascience-notebook:lab-3.1.11',
-                        'cpu_limit': 4,
-                        'mem_limit': '8G',
-					}
-			}
-        ]
+
+c.JupyterHub.allow_named_servers = True
 c.JupyterHub.tornado_settings = {
             'headers': {
                 'Access-Control-Allow-Origin': "*",
