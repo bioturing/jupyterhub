@@ -178,11 +178,17 @@ class UserDict(dict):
 
 
 class _SpawnerDict(dict):
+    """
+    Acts like a dictionary, but when getting a none-existing 
+    key (server name), create a new server rather than raising an error
+    @param spawner_factory: A hook function to create a server
+    """
     def __init__(self, spawner_factory):
         self.spawner_factory = spawner_factory
 
     def __getitem__(self, key):
         if key not in self:
+            # Create a new server with name as key
             self[key] = self.spawner_factory(key)
         return super().__getitem__(key)
 

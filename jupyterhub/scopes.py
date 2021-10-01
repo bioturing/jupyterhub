@@ -366,6 +366,7 @@ def _check_scope_access(api_handler, req_scope, **kwargs):
     Returns True for (potentially restricted) access, False for refused access
     """
     # Parse user name and server name together
+    print("kwargs in _check_scope_access:", kwargs)
     try:
         api_name = api_handler.request.path
     except AttributeError:
@@ -437,6 +438,7 @@ def parse_scopes(scope_list):
                 parsed_scopes[base_scope][key] = {value}
             else:
                 parsed_scopes[base_scope][key].add(value)
+    print("Parsed scopes:", parsed_scopes)
     return parsed_scopes
 
 

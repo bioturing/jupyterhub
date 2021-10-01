@@ -686,6 +686,7 @@ class BaseHandler(RequestHandler):
             # if self.redirect_to_server, default login URL initiates spawn,
             # otherwise send to Hub home page (control panel)
             if user and self.redirect_to_server:
+                # This like implies that the user only has one server and it is active 
                 if user.spawner.active:
                     # server is active, send to the user url
                     next_url = user.url
@@ -1318,7 +1319,6 @@ class BaseHandler(RequestHandler):
                 html = self.render_template('error.html', sync=True, **ns)
 
         self.write(html)
-
 
 class Template404(BaseHandler):
     """Render our 404 template"""

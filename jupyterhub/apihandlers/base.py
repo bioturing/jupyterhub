@@ -13,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from tornado import web
 
 from .. import orm
-from ..handlers import BaseHandler
+from ..handlers.base import BaseHandler
 from ..utils import isoformat
 from ..utils import url_path_join
 

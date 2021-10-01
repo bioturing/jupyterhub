@@ -149,6 +149,7 @@ class SpawnHandler(BaseHandler):
         if server_name is None:
             server_name = ''
 
+        # Create a new server. See _SpawnerDict
         spawner = user.spawners[server_name]
 
         pending_url = self._get_pending_url(user, server_name)
