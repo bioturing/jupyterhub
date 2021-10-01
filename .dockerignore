@@ -11,3 +11,5 @@ build
 bioturingauth/node_modules/*
 jsx/node_modules/*
 more-jsx/node_modules/*
+key.key
+key.crt

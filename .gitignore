@@ -36,3 +36,5 @@ bioturingauth/node_modules
 share/jupyterhub/static/js/*.jpg
 share/jupyterhub/static/js/*.svg
 jsx/build
+key.crt
+key.key
