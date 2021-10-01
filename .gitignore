@@ -33,3 +33,6 @@ oldest-requirements.txt
 jupyterhub-proxy.pid
 examples/server-api/service-token
 bioturingauth/node_modules
+share/jupyterhub/static/js/*.jpg
+share/jupyterhub/static/js/*.svg
+jsx/build
