@@ -281,10 +281,16 @@ class APIHandler(BaseHandler):
                 if spawner.active and scope_filter(spawner, kind='server'):
                     servers[name] = self.server_model(spawner)
             if not servers and 'servers' not in allowed_keys:
-                # omit servers if no access
-                # leave present and empty
-                # if request has access to read servers in general
-                model.pop('servers')
+              # omit servers if no access
+              # leave present and empty
+              # if request has access to read servers in general
+              model.pop('servers')
+        profile_list = []
+        if hasattr(user.spawner, "profile_list"):
+          profile_list = user.spawner.profile_list
+        if not isinstance(profile_list, list):
+          profile_list = []
+        model['profile_list'] = profile_list
         return model
 
     def group_model(self, group):

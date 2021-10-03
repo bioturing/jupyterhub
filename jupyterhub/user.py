@@ -561,12 +561,14 @@ class User:
 
         base_url = url_path_join(self.base_url, server_name) + '/'
 
+        # Add new server to the database
         orm_server = orm.Server(base_url=base_url)
         db.add(orm_server)
         note = "Server at %s" % base_url
         api_token = self.new_api_token(note=note, roles=['server'])
         db.commit()
 
+        # Create the spawner object. Not call the spawn method yet
         spawner = self.spawners[server_name]
         spawner.server = server = Server(orm_server=orm_server)
         assert spawner.orm_spawner.server is orm_server
@@ -576,6 +578,7 @@ class User:
         spawner.handler = handler
 
         # Passing user_options to the spawner
+        self.log.warn("Options got from the POST hook: {options}".format(options=options))
         if options is None:
             # options unspecified, load from db which should have the previous value
             options = spawner.orm_spawner.user_options or {}

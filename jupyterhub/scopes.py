@@ -438,7 +438,6 @@ def parse_scopes(scope_list):
                 parsed_scopes[base_scope][key] = {value}
             else:
                 parsed_scopes[base_scope][key].add(value)
-    print("Parsed scopes:", parsed_scopes)
     return parsed_scopes
 
 

@@ -862,9 +862,25 @@ class ActivityAPIHandler(APIHandler):
 
         self.db.commit()
 
+class SpawnerProfilesAPIHandler(APIHandler):
+	"""Get server info"""
+	@web.authenticated
+	@needs_scope("servers")
+	async def get(self):
+		user = self.current_user
+		status = 404 if user == None else 200
+		profile_list = []
+		if hasattr(user.spawner, "profile_list"):
+			profile_list = user.spawner.profile_list
+		if not isinstance(profile_list, list):
+			profile_list = []
+		self.set_header('Content-Type', 'text/plain')
+		self.set_status(status)
+		self.write(json.dumps(profile_list))
 
 default_handlers = [
     (r"/api/user", SelfAPIHandler),
+    (r"/api/user/profile-list", SpawnerProfilesAPIHandler),
     (r"/api/users", UserListAPIHandler),
     (r"/api/users/([^/]+)", UserAPIHandler),
     (r"/api/users/([^/]+)/server", UserServerAPIHandler),

@@ -53,7 +53,7 @@ class HomeHandler(BaseHandler):
     """Render the user's home page."""
 
     @web.authenticated
-    async def get(self):
+    async def get(self, *args, **kwargs):
         user = self.current_user
         if user.running:
             # trigger poll_and_notify event in case of a server that died
@@ -599,6 +599,7 @@ class HealthCheckHandler(BaseHandler):
 default_handlers = [
     (r'/', RootHandler),
     (r'/home', HomeHandler),
+		(r'/home/(.*)', HomeHandler),
     (r'/admin', AdminHandler),
     (r'/spawn-pending/([^/]+)', SpawnPendingHandler),
     (r'/spawn-pending/([^/]+)/([^/]+)', SpawnPendingHandler),

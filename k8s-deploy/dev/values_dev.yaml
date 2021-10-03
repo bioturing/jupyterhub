@@ -394,10 +394,10 @@ singleuser:
   startTimeout: 300
   cpu:
     limit:
-    guarantee: 4
+    guarantee: 1
   memory:
     limit:
-    guarantee: 8G
+    guarantee: 1G
   extraResource:
     limits: {}
     guarantees: {}
