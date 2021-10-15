@@ -571,7 +571,7 @@ ingress:
 # https://github.com/jupyterhub/jupyterhub-idle-culler#as-a-standalone-script
 #
 cull:
-  enabled: true
+  enabled: false # BIOT: disable for to keep the server alive when named_server is tru
   users: false # --cull-users
   removeNamedServers: false # --remove-named-servers
   timeout: 3600 # --timeout

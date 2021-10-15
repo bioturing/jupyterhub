@@ -1,5 +1,35 @@
 #!/bin/bash
-pip install . --use-feature=in-tree-build
+#pip install . --use-feature=in-tree-build
 export AUTH_SECRET="7ca688b260b4689286b8a4df8c1d96ee"
+export HUB_SERVICE_PORT=8081
+export PROXY_API_SERVICE_PORT=8001
+export PROXY_API_PORT_8001_TCP_PORT=8001
+export PROXY_PUBLIC_SERVICE_HOST=10.96.76.98
+export ALBUM_SERVICE_PORT_80_TCP_PROTO=tcp
+export PROXY_PUBLIC_PORT_80_TCP_PROTO=tcp
+export HUB_PORT=tcp://10.96.88.217:8081
+export PROXY_PUBLIC_PORT_80_TCP_ADDR=10.96.76.98
+export ALBUM_SERVICE_PORT_80_TCP_ADDR=10.96.205.49
+export HUB_PORT_8081_TCP=tcp://10.96.88.217:8081
+export LESSCLOSE=/usr/bin/lesspipe %s %s
+export HELM_RELEASE_NAME=jupyterhub-album
+export LESSOPEN=| /usr/bin/lesspipe %s
+export PROXY_API_PORT=tcp://10.96.57.132:8001
+export PROXY_API_PORT_8001_TCP_PROTO=tcp
+export KUBERNETES_PORT_443_TCP_PROTO=tcp
+export PROXY_PUBLIC_PORT_80_TCP_PORT=80
+export KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+export HUB_SERVICE_PORT_HUB=8081
+export CONFIGPROXY_AUTH_TOKEN=6ae03b3fd23e19f2f521839bc10bc90341334b65a49b280a4a0192446a2cb910
+export KUBERNETES_SERVICE_HOST=10.96.0.1
+export KUBERNETES_PORT=tcp://10.96.0.1:443
+export KUBERNETES_PORT_443_TCP_PORT=443
+export PROXY_API_PORT_8001_TCP=tcp://10.96.57.132:8001
+export PROXY_PUBLIC_SERVICE_PORT=80
+export HUB_PORT_8081_TCP_PORT=8081
+export HUB_PORT_8081_TCP_ADDR=10.96.88.217
+export HUB_PORT_8081_TCP_PROTO=tcp
+export AUTH_SECRET=7ca688b260b4689286b8a4df8c1d96ee
+_=/usr/bin/env
 nvm use v12.12
-jupyterhub -f testing/jupyterhub_config.py
+jupyterhub --config /mnt/hdd3/tan/code/jupyterhub/k8s-deploy/dev/jupyterhub_album_config.py --debug

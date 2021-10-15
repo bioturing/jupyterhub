@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
     - hosts:
-      - jupyter-dev.bioturing.com
+      - jupyter-album.bioturing.com
       secretName: tls-secret
   rules:
-    - host: jupyter-dev.bioturing.com
+    - host: jupyter-album.bioturing.com
       http:
         paths:
         - path: /jupyterhub/

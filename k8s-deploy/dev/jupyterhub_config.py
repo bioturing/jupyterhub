@@ -8,6 +8,8 @@ to enable testing without administrative privileges.
 #from bioturingauth.auth import BioTuringAuthenticator
 
 c.JupyterHub.authenticator_class = 'bioturingauth.auth.BioTuringAuthenticator'
+c.Authenticator.admin_users = {'tan@bioturing.com'}
+
 
 # Optionally set a global password that all users must use
 # c.DummyAuthenticator.password = "your_password"
@@ -44,7 +46,17 @@ c.BioTuringKubeSpawner.profile_list = [
                         'cpu_limit': 8,
                         'mem_limit': '16G',
                     }
-                }
+                },
+                {
+                    'display_name': 'Single-cell notebook CellChat - Medium Instance',
+                    'slug': 'singlecell-cellchat',
+                    'kubespawner_override': {
+                        'image': 'bioturing/r-notebook-cellchat:latest',
+                        'cpu_limit': 4,
+                        'mem_limit': '8G',
+                        }
+                    }
+                  
 ]
 c.Spawner.args = ['--NotebookApp.allow_origin=*']
 c.Spawner.default_url = '/lab'
