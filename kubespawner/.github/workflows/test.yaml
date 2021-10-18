@@ -1,0 +1,166 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+#
+name: Test
+
+# Trigger the workflow's on pushed branches, pull requests, and manually run
+# workflows.
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  # Run "pre-commit run --all-files"
+  pre-commit:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 2
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      # ref: https://github.com/pre-commit/action
+      - uses: pre-commit/action@v2.0.0
+      - name: Help message if pre-commit fail
+        if: ${{ failure() }}
+        run: |
+          echo "You can install pre-commit hooks to automatically run formatting"
+          echo "on each commit with:"
+          echo "    pre-commit install"
+          echo "or you can run by hand on staged files with"
+          echo "    pre-commit run"
+          echo "or after-the-fact on already committed files with"
+          echo "    pre-commit run --all-files"
+
+  run-pytest:
+    name: Run pytest
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+
+    strategy:
+      # Keep running even if one variation of the job fail
+      fail-fast: false
+      matrix:
+        # We run this job multiple times with different parameterization
+        # specified below, these parameters have no meaning on their own and
+        # gain meaning on how job steps use them.
+        #
+        # k3s-channel:        https://update.k3s.io/v1-release/channels
+        # k8s-python-client:  https://github.com/kubernetes-client/python#compatibility
+        #
+        include:
+          # Tests with various k8s-python-client versions
+          - python: 3.7
+            k3s: v1.16
+            k8s-python-client: 10.* # supports k8s 1.14
+          - python: 3.8
+            k3s: v1.16
+            k8s-python-client: 11.* # supports k8s 1.15
+          - python: 3.9
+            k3s: v1.16
+            k8s-python-client: 12.* # supports k8s 1.16
+          - python: 3.9
+            k3s: v1.17
+            k8s-python-client: 17.* # supports k8s 1.17
+
+          # Test with pre-releases of k8s-python-client
+          - python: 3.9
+            k3s: v1.18
+            k8s-python-client: pre
+
+          # Test with various recent k8s versions
+          - python: 3.8
+            k3s: stable
+            k8s-python-client: 17.*
+          - python: 3.8
+            k3s: latest
+            k8s-python-client: 17.*
+
+          # Test with JupyterHub in main branch
+          - python: 3.8
+            k3s: v1.16
+            k8s-python-client: 17.*
+            jupyterhub: main
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "${{ matrix.python }}"
+
+      - name: Install package and test dependencies
+        env:
+          K8S_PYTHON_CLIENT_VERSION: "${{ matrix.k8s-python-client }}"
+          JUPYTERHUB_VERSION: ${{ matrix.jupyterhub }}
+        run: |
+          if [[ "$K8S_PYTHON_CLIENT_VERSION" == "pre" ]]; then
+              PRE="--pre"
+              PINS=""
+          else
+              PRE=""
+              PINS="kubernetes==${K8S_PYTHON_CLIENT_VERSION}"
+          fi
+          if [ "$JUPYTERHUB_VERSION" == "main" ]; then
+              PINS="$PINS git+https://github.com/jupyterhub/jupyterhub"
+          fi
+
+          pip install --upgrade setuptools pip
+          pip install -e ".[test]" ${PRE} ${PINS}
+          pip freeze
+
+      # flake8 runs a very quick code analysis without running any of the code
+      # it analyses
+      - name: Run flake8
+        run: |
+          flake8 kubespawner
+
+      # Starts a k8s cluster with NetworkPolicy enforcement and installs both
+      # kubectl and helm. We won't need network policy enforcement or helm
+      # though.
+      #
+      # ref: https://github.com/jupyterhub/action-k3s-helm/
+      - uses: jupyterhub/action-k3s-helm@v1
+        with:
+          k3s-channel: ${{ matrix.k3s }}
+          metrics-enabled: false
+          traefik-enabled: false
+          docker-enabled: false
+
+      - name: Run pytest
+        run: |
+          pytest -v --durations 10 --cov kubespawner --color=yes
+
+      # ref: https://github.com/jupyterhub/action-k8s-namespace-report
+      - name: Kubernetes namespace report
+        uses: jupyterhub/action-k8s-namespace-report@v1
+        if: always()
+
+      - name: Submit a codecov report
+        run: |
+          pip install codecov
+          codecov
+
+  # Keep this job synced with the publish job in publish.yaml!
+  package-build:
+    name: Test package build
+    runs-on: ubuntu-20.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: install build package
+        run: |
+          pip install --upgrade pip
+          pip install build
+          pip freeze
+
+      - name: build release
+        run: |
+          python -m build --sdist --wheel .
+          ls -alh dist
