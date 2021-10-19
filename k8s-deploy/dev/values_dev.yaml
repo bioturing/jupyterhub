@@ -65,7 +65,7 @@ hub:
         - ReadWriteOnce
       storage: 1Gi
       subPath:
-      storageClassName:
+      storageClassName: longhorn
     url:
     password:
   labels: {}
@@ -382,7 +382,7 @@ singleuser:
     capacity: 10Gi
     homeMountPath: /home/jovyan
     dynamic:
-      storageClass:
+      storageClass: longhorn
       pvcNameTemplate: claim-{username}{servername}
       volumeNameTemplate: volume-{username}{servername}
       storageAccessModes: [ReadWriteOnce]
