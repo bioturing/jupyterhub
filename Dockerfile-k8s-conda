@@ -1,35 +1,7 @@
-FROM ubuntu:20.04
+FROM continuumio/miniconda3:4.10.3p0 
 
-# VULN_SCAN_TIME=2021-09-17_01:10:00
-
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=C.UTF-8
-
-# psycopg2-binary in requirements.txt is not compiled for linux/arm64
-# TODO: Use build stages to compile psycopg2-binary separately instead of
-# bloating the image size
-RUN EXTRA_APT_PACKAGES=; \
-    if [ `uname -m` != 'x86_64' ]; then EXTRA_APT_PACKAGES=libpq-dev; fi; \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-      git \
-      vim \
-      less \
-      python3 \
-      python3-dev \
-      python3-pip \
-      python3-setuptools \
-      python3-wheel \
-      libssl-dev \
-      libcurl4-openssl-dev \
-      build-essential \
-      sqlite3 \
-      curl \
-      dnsutils \
-      $EXTRA_APT_PACKAGES \
-      && \
-    rm -rf /var/lib/apt/lists/*
+RUN conda install -y -c conda-forge mamba
+RUN mamba install -y -c conda-forge jupyterhub pip
 
 ARG NB_USER=jovyan
 ARG NB_UID=1000
@@ -54,6 +26,12 @@ RUN PYCURL_SSL_LIBRARY=openssl \
 COPY ./bioturingauth /src/bioturingauth
 WORKDIR /src/bioturingauth
 RUN python3 setup.py install
+
+# Install kubespawner 
+COPY ./kubespawner /src/kubespawner
+WORKDIR /src/kubespawner
+RUN pip install ./
+
 
 # Install a local jupyterhub repo
 COPY . /src/jupyterhub
