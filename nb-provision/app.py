@@ -2,35 +2,45 @@
 
 import os
 import requests
-import json
+
+from typing import Optional
+from fastapi import FastAPI, HTTPException
 from urllib.request import urlretrieve
 
-API_TOKEN = os.environ.get(["API_TOKEN"], None)
-NOTEBOOK_ID = os.environ.get(["NOTEBOOK_ID"], None)
-RESOURCE_URL = os.environ.get(["RESOURCE_URL"], None)
-HOME_VOLUME = os.environ.get(["HOME_VOLUME"], None)
 
-assert (API_TOKEN and NOTEBOOK_ID and RESOURCE_URL and HOME_VOLUME)
+token = os.environ.get("NOTEBOOKREPO_API_TOKEN", None)
+nb_apiserver = os.environ.get("NOTEBOOKREPO_SERVER", None)
 
-def get_resource():
-        data = {
-                "resource_type" : "notebook",
-                "id" : NOTEBOOK_ID,
-                "token" : API_TOKEN
-        }
-        r = requests.post(RESOURCE_URL, data)
-        if r.status_code == 200:
-                return json.loads(r.text)
-        raise Exception("Get resource status %s" % str(r))
+app = FastAPI()
 
-def main():
-        payload = get_resource()
-        nb_file, headers = urlretrieve(payload["download_link"], payload["filename"])
-        if os.path.exists(nb_file):
-                print("Notebook provisioned successfully")
-                return 0
-        else:
-                raise Exception("Notebook file doesn't exists after downloading")
+assert (token and nb_apiserver)
 
-if __name__ == "__main__":
-        main()
+def provision(resource):
+	# get the notebook file, bundle , or something else in the feature
+	# TODO: add some naming method based on timestamp
+	filepath = os.path.join(os.environ["HOME"], resource["filename"])
+	nbfile, headers = urlretrieve(resource["download_link"], filepath)
+	if not os.path.exists(nbfile):
+		### Log, raise exception
+		print(f"Cannot provision notebook: {filepath}")
+		return None
+	# update the environment
+
+	filename = resource["filename"] 
+	return f"/notebooks/{filename}"	
+
+@app.post("/jupyterhub/user/{useremail}/nbapi/provision")
+def nb_provision(nb_id: int):
+	data = {"resource_type": "notebook", "id": nb_id, "token": "mytoken"}
+	r = requests.post(url = f"{nb_apiserver}/get_notebooks/", params= data)
+	if r.status_code != 200:
+		raise HTTPException(status_code = r.status_code, detail = "Cannot get resource from notebook api server")
+	else:
+		resource = r.json()
+		# TODO: add more sophisticate steps here for file ext
+		nbfile = provision(resource)
+		if not nbfile: # provision failed
+			raise HTTPException(status_code = 502, detail = "Got the resource but failed to provision")
+	return {"route": f"{nbfile}"}
+			
+
