@@ -299,6 +299,12 @@ class Proxy(LoggingConfigurable):
             spawner.server.host,
             {'user': user.name, 'server_name': server_name},
         )
+        # TODO: subclass the Proxy then add the route there
+        await self.add_route(
+            spawner.nb_provision_proxy_spec,
+            spawner.get_nbprovision_apiurl(),
+            {'user': user.name, 'server_name': server_name},
+        )
 
     async def delete_user(self, user, server_name=''):
         """Remove a user's server from the proxy table."""
@@ -368,7 +374,9 @@ class Proxy(LoggingConfigurable):
             for name, spawner in user.spawners.items():
                 if spawner.ready:
                     spec = spawner.proxy_spec
+                    nbprovision_spec = spawner.nb_provision_proxy_spec
                     good_routes.add(spec)
+                    good_routes.add(nbprovision_spec) 
                     if spec not in user_routes:
                         self.log.warning(
                             "Adding missing route for %s (%s)", spec, spawner.server

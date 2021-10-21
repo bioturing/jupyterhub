@@ -464,6 +464,11 @@ class JupyterHub(Application):
         help="The location of jupyterhub data files (e.g. /usr/local/share/jupyterhub)",
     ).tag(config=True)
 
+    AlbumAPIHost = Unicode(
+	"http://127.0.0.1:8000",
+	help="Notebook Album server to get the provisioned notebook",	
+    ).tag(config=True)
+
     template_paths = List(
         help="Paths to search for jinja templates, before using the default templates."
     ).tag(config=True)
@@ -2741,6 +2746,7 @@ class JupyterHub(Application):
         _log_cls("Authenticator", self.authenticator_class)
         _log_cls("Spawner", self.spawner_class)
         _log_cls("Proxy", self.proxy_class)
+        self.log.info("AlbumAPIHost: %s", self.AlbumAPIHost)
 
         self.init_eventlog()
         self.init_pycurl()

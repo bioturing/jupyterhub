@@ -13,3 +13,5 @@ jsx/node_modules/*
 more-jsx/node_modules/*
 key.key
 key.crt
+*.git*
+*Dockerfile*

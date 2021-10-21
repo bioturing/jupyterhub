@@ -348,6 +348,7 @@ class User:
             authenticator=self.authenticator,
             config=self.settings.get('config'),
             proxy_spec=url_path_join(self.proxy_spec, server_name, '/'),
+            nb_provision_proxy_spec=url_path_join(self.proxy_spec, server_name, '/nbapi/'),
             db=self.db,
             oauth_client_id=client_id,
             cookie_options=self.settings.get('cookie_options', {}),

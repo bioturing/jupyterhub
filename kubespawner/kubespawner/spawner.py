@@ -1864,6 +1864,10 @@ class KubeSpawner(Spawner):
             self._expand_all(self.extra_annotations)
         )
 
+        for i in range(0, len(self.extra_containers)):
+            print(self.extra_containers[i])
+            self.extra_containers[i]["volume_mounts"] = self._expand_all(self.volume_mounts)
+
         return make_pod(
             name=self.pod_name,
             cmd=real_cmd,
@@ -2924,6 +2928,73 @@ class BioTuringKubeSpawner(KubeSpawner):
     spawned by a user will have its own KubeSpawner instance.
     Customized by BioTuring Team.
     """
+    albumAPIHost = Unicode(
+        "http://127.0.0.1:8000",
+        help="Notebook Album server to get the provisioned notebook",	
+    ).tag(config=True)
+
+    notebookrepo_id = Unicode(
+        "-1",
+        help = "Id to get the notebook from notebook server"
+    )
+
+    notebookrepo_server = Unicode(
+        "",
+        help = "Where to get the notebook content"
+    )
+
+    notebookrepo_server_token = Unicode(
+        "",
+        help = "Token to get the notebook from notebook server"
+    )
+
+    nbprovision_port = Integer(
+        8000,
+        help = "Port of the nb-provision container"
+    )
+
+    def get_nbprovision_apiurl(self):
+        return f"http://{self.server.ip}:{self.nbprovision_port}"
+
+    def _options_from_form(self, formdata):
+        """get the option selected by the user on the form
+
+        Get more options other than "profile"
+
+        Args:
+            formdata: user selection returned by the form
+
+        Returns:
+            user_options (dict): the selected profile in the user_options form,
+                e.g. ``{"profile": "cpus-8"}``
+            notebook_profile (dict): the notebook profile for provisioning
+            
+        """
+        # legacy of the super class
+        profile = formdata.get('profile', [None])[0]
+
+        for k, v in formdata.items():
+            formdata[k] = v[0]
+        formdata['profile'] = profile
+        self.notebookrepo_id = formdata.get('notebookrepo_id', "-1")
+        self.notebookrepo_server = formdata.get('notebookrepo_server', "")
+        self.notebookrepo_server_token = formdata.get('notebookrepo_server_token', "")
+        return formdata
+
+    def get_env(self):
+        """Return the environment dict to use for the Spawner.
+
+        See also: jupyterhub.Spawner.get_env
+        """
+
+        self.log.warning("Getting environment variables from the KubeSpawner class")
+        env = super().get_env()
+
+        env["NOTEBOOKREPO_SERVER"] = self.notebookrepo_server
+        env["NOTEBOOKREPO_ID"] = self.notebookrepo_id
+        env["NOTEBOOKREPO_API_TOKEN"] = self.notebookrepo_server_token
+        
+        return env 
     @staticmethod
     def get_profile_list():
         """

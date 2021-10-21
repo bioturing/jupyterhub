@@ -36,5 +36,5 @@ c.ConfigurableHTTPProxy.extra_routes = {
     "/jupyterhub/sso/":"http://127.0.0.1:3000/jupyterhub/sso"
 }
 c.JupyterHub.base_url = "/jupyterhub"
-c.JupyterHub.ssl_key = '/mnt/hdd3/tan/code/jupyterhub/key.key'
-c.JupyterHub.ssl_cert = '/mnt/hdd3/tan/code/jupyterhub/key.crt'
+c.JupyterHub.ssl_key = '/mnt1/tan/SoftWare/jupyterhub/key.key'
+c.JupyterHub.ssl_cert = '/mnt1/tan/SoftWare/jupyterhub/key.crt'

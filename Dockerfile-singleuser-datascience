@@ -1,0 +1,27 @@
+FROM continuumio/miniconda3:4.10.3p0 
+
+RUN conda install -y -c conda-forge mamba
+RUN mamba install -y -c conda-forge jupyterhub pip
+RUN mamba install -y -c anaconda pyzmq
+
+
+
+ARG NB_USER=jovyan
+ARG NB_UID=1000
+ARG HOME=/home/jovyan
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    --home ${HOME} \
+    --force-badname \
+    ${NB_USER}
+
+# Install a local jupyterhub repo
+COPY . /src/jupyterhub
+WORKDIR /src/jupyterhub
+RUN pip3 install .
+
+RUN pip3 install notebook
+USER ${NB_USER}
+WORKDIR /home/jovyan

@@ -445,3 +445,5 @@ for app, cfg in get_config("hub.config", {}).items():
 for key, config_py in sorted(get_config("hub.extraConfig", {}).items()):
     print("Loading extra config: %s" % key)
     exec(config_py)
+
+c.BioTuringKubeSpawner.albumAPIHost = "http://127.0.0.1:8000/"	

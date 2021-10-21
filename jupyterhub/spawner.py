@@ -178,6 +178,7 @@ class Spawner(LoggingConfigurable):
             )
 
     proxy_spec = Unicode()
+    nb_provision_proxy_spec = Unicode()
 
     @property
     def last_activity(self):

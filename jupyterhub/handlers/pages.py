@@ -242,6 +242,7 @@ class SpawnHandler(BaseHandler):
             )
 
         form_options = {}
+        print("POST body argument:", repr(self.request.body_arguments))
         for key, byte_list in self.request.body_arguments.items():
             form_options[key] = [bs.decode('utf8') for bs in byte_list]
         for key, byte_list in self.request.files.items():
@@ -599,7 +600,7 @@ class HealthCheckHandler(BaseHandler):
 default_handlers = [
     (r'/', RootHandler),
     (r'/home', HomeHandler),
-		(r'/home/(.*)', HomeHandler),
+                (r'/home/(.*)', HomeHandler),
     (r'/admin', AdminHandler),
     (r'/spawn-pending/([^/]+)', SpawnPendingHandler),
     (r'/spawn-pending/([^/]+)/([^/]+)', SpawnPendingHandler),

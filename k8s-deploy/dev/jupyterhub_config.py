@@ -18,50 +18,10 @@ c.Authenticator.admin_users = {'tan@bioturing.com'}
 
 #c.JupyterHub.spawner_class = SimpleLocalProcessSpawner
 
-c.BioTuringKubeSpawner.profile_list = [
-                {
-                    'display_name': 'Datascience notebook - Small Instance',
-                    'slug': 'datascience-small',
-                    'default': True,
-                    'kubespawner_override': {
-                        'image': 'jupyter/datascience-notebook:2343e33dec46',
-                        'cpu_limit': 2,
-                        'mem_limit': '4G',
-                    }
-                },
-				{
-                    'display_name': 'Datascience notebook - Medium Instance',
-                    'slug': 'datascience-medium',
-                    'kubespawner_override': {
-                        'image': 'jupyter/datascience-notebook:2343e33dec46',
-                        'cpu_limit': 4,
-                        'mem_limit': '8G',
-                    }
-                },
-				{
-                    'display_name': 'Datascience notebook - Large Instance',
-                    'slug': 'datascience-large',
-                    'kubespawner_override': {
-                        'image': 'jupyter/datascience-notebook:2343e33dec46',
-                        'cpu_limit': 8,
-                        'mem_limit': '16G',
-                    }
-                },
-                {
-                    'display_name': 'Single-cell notebook CellChat - Medium Instance',
-                    'slug': 'singlecell-cellchat',
-                    'kubespawner_override': {
-                        'image': 'bioturing/r-notebook-cellchat:latest',
-                        'cpu_limit': 4,
-                        'mem_limit': '8G',
-                        }
-                    }
-                  
-]
 c.Spawner.args = ['--NotebookApp.allow_origin=*']
-c.Spawner.default_url = '/lab'
+c.Spawner.default_url = '/tree'
 
-c.JupyterHub.allow_named_servers = True
+c.JupyterHub.allow_named_servers = False
 c.JupyterHub.tornado_settings = {
             'headers': {
                 'Access-Control-Allow-Origin': "*",

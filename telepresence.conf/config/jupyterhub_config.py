@@ -57,6 +57,8 @@ c.JupyterHub.tornado_settings = {
     "slow_spawn_timeout": 0,
 }
 
+### notebook album api
+c.JupyterHub.AlbumAPIHost = "http://127.0.0.1:8000"
 
 # configure the hub db connection
 db_type = get_config("hub.db.type")
@@ -125,6 +127,7 @@ if release:
     common_labels["release"] = release
 
 c.BioTuringKubeSpawner.namespace = os.environ.get("POD_NAMESPACE", "default")
+
 
 # Max number of consecutive failures before the Hub restarts itself
 # requires jupyterhub 0.9.2
@@ -444,3 +447,4 @@ for app, cfg in get_config("hub.config", {}).items():
 for key, config_py in sorted(get_config("hub.extraConfig", {}).items()):
     print("Loading extra config: %s" % key)
     exec(config_py)
+

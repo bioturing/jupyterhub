@@ -86,7 +86,7 @@ hub:
         name: jupyterhub-config
   image:
     name: k8s-jupyterhub
-    tag: "dev"
+    tag: "conda"
     pullPolicy: Never
     pullSecrets: []
   resources: {}
@@ -367,7 +367,16 @@ singleuser:
   extraEnv: {}
   lifecycleHooks: {}
   initContainers: []
-  extraContainers: []
+  extraContainers:
+    - name: nb-provision
+      image: bioturing/nb-provision:latest
+      ports:
+        - containerPort: 8000
+      env:
+          - name: NOTEBOOKREPO_API_TOKEN
+            value: "userspecifictoken"
+          - name: NOTEBOOKREPO_SERVER
+            value: "http://192.168.10.145:9999"
   uid: 1000
   fsGid: 100
   serviceAccountName:
@@ -402,7 +411,7 @@ singleuser:
     limits: {}
     guarantees: {}
   cmd: jupyterhub-singleuser
-  defaultUrl: "/lab"
+  defaultUrl: "/tree"
   extraPodConfig: {}
   profileList: []
 

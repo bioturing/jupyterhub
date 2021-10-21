@@ -38,7 +38,7 @@ def download_notebook(filename: str):
 
 @app.post("/get_notebooks/")
 def get_item(resource_type: str, id: int, token: str, request: Request):
-	# check api token
+	# TODO check api token
 	filename = albums[id]["filename"]
 	return {
 		"download_link": f"{hostname}/download/{filename}",
