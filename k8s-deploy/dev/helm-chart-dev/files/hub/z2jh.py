@@ -9,6 +9,8 @@ import os
 
 import yaml
 
+root_dir = os.environ.get("TELEPRESENCE_ROOT", "")
+
 # memoize so we only load config once
 @lru_cache()
 def _load_config():
@@ -18,7 +20,7 @@ def _load_config():
 
     cfg = {}
     for source in ("secret/values.yaml", "existing-secret/values.yaml"):
-        path = f"/usr/local/etc/jupyterhub/{source}"
+        path = f"{root_dir}/usr/local/etc/jupyterhub/{source}"
         if os.path.exists(path):
             print(f"Loading {path}")
             with open(path) as f:
@@ -33,7 +35,7 @@ def _load_config():
 def _get_config_value(key):
     """Load value from the k8s ConfigMap given a key."""
 
-    path = f"/usr/local/etc/jupyterhub/config/{key}"
+    path = f"{root_dir}/usr/local/etc/jupyterhub/config/{key}"
     if os.path.exists(path):
         with open(path) as f:
             return f.read()
@@ -47,7 +49,7 @@ def get_secret_value(key, default="never-explicitly-set"):
     given a key."""
 
     for source in ("existing-secret", "secret"):
-        path = f"/usr/local/etc/jupyterhub/{source}/{key}"
+        path = f"{root_dir}/usr/local/etc/jupyterhub/{source}/{key}"
         if os.path.exists(path):
             with open(path) as f:
                 return f.read()

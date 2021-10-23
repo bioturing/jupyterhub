@@ -19,6 +19,7 @@ from z2jh import (
     get_name,
     get_name_env,
     get_secret_value,
+    root_dir
 )
 
 
@@ -420,7 +421,7 @@ if get_config("debug.enabled", False):
     c.Spawner.debug = True
 
 # load /usr/local/etc/jupyterhub/jupyterhub_config.d config files
-config_dir = "/usr/local/etc/jupyterhub/jupyterhub_config.d"
+config_dir = f"{root_dir}/usr/local/etc/jupyterhub/jupyterhub_config.d"
 if os.path.isdir(config_dir):
     for file_path in sorted(glob.glob(f"{config_dir}/*.py")):
         file_name = os.path.basename(file_path)
