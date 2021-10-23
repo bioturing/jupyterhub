@@ -5,6 +5,12 @@ const getWhoAmI = function() {
 		.then(data => data.json())
 }
 
+const getPublicNotebooks = function() {
+	return fetch(`${process.env.NOTEBOOK_PUBLIC_REPO}`)
+		.then(data => data.json())
+}
+
 module.exports = {
-	getWhoAmI : getWhoAmI,
+	getWhoAmI,
+	getPublicNotebooks
 }

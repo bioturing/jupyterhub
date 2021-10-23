@@ -84,6 +84,20 @@ module.exports = merge(common('development'), {
             }
         }
     ];
+    const nb_data = [
+      {
+          "category": "RNA-Velocity",
+          "description": "scVelo is a scalable toolkit for RNA velocity analysis in single cells, based on Bergen et al. (Nature Biotech, 2020)." + 
+                         "This is the DentateGyrus notebook that reproduces the analysis from the paper", 
+          "display_name": "scVelo - Bergen et al. (Nature Biotech, 2020)",
+          "name": "DentateGyrus",
+          "filename": "velocyto/DentateGyrus.ipynb",
+          "id": 1,
+          "format": "IPython",
+          "env_filename": "velocyto/environment.yaml",
+          "tools": ["scvelo"]
+      },	
+  ]
 		const spawner_progress = {"data": {
 			"progress": 100,
 			"ready": true,
@@ -92,6 +106,10 @@ module.exports = merge(common('development'), {
 			"url": "/jupyterhub/user/tan@bioturing.com/Tan/"
 	}};
       app.use(express.json());
+
+      app.get("/nbk/", (req, res) => {
+        res.status(200).send(JSON.stringify(nb_data))
+      })
 
       app.get("/hub/home/*", (req, res) => {
         res.status(200).sendFile(path.resolve(__dirname, "dist/index.html"),)

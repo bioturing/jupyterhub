@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { accessibleRouteChangeHandler } from '@app/utils/utils';
-import { ServerPanel } from '@app/ServerPanel/ServerPanel';
+import { NotebookPanel } from '@app/NotebookPanel/NotebookPanel';
 import { NewServer} from '@app/NewServer/NewServer';
 import { Support } from '@app/Support/Support';
 import { Spawning } from '@app/Spawner/Spawning';
@@ -47,11 +47,11 @@ const routes: AppRouteConfig[] = [
   //   title: 'PatternFly Seed | Main Dashboard',
   // },
   {
-    component: ServerPanel,
+    component: NotebookPanel,
     exact: true,
-    label: 'Server Panel',
+    label: 'Notebook Panel',
     path: normalizeRoute("/"),
-    title: normalizeTitle("Server Panel"),
+    title: normalizeTitle("Notebook Panel"),
   },
   {
     component: NewServer,

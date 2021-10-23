@@ -41,3 +41,4 @@ key.key
 share/jupyterhub/static/user/
 jsx/yarn.lock
 *.loom
+nb-album-api/*/*/data/

@@ -11,8 +11,8 @@ import {
 } from '@patternfly/react-core';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import ArrowRightIcon from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
-import ServerCardList from './ServerCard';
-import {getWhoAmI} from '../../services/users';
+import NotebookCardList from './NotebookCard';
+import {getPublicNotebooks} from '../../services/users';
 import { NavLink } from 'react-router-dom';
 import {normalizeRoute} from '../routes';
 
@@ -35,16 +35,15 @@ const WelcomeNewServer: React.FunctionComponent = function(props) {
 	)
 }
 
-const ServerPanel: React.FunctionComponent = function(props) {
+const NotebookPanel: React.FunctionComponent = function(props) {
 	const [userModel, setuserModel] = useState({profile_list:[]});
-	const [userServers, setUserServers] = useState({});
+	const [publicNotebooks, setPublicNotebooks] = useState([]);
 	useEffect(() => {
 		let mounted = true;
-		getWhoAmI()
+		getPublicNotebooks()
 		  .then(model => {
 		    if(mounted) {
-		      setuserModel(model);
-					setUserServers(model.servers);
+			  setPublicNotebooks(model);
 		    }
 		  })
 		return () => mounted = false;
@@ -54,9 +53,9 @@ const ServerPanel: React.FunctionComponent = function(props) {
 		<PageSection variant={PageSectionVariants.light}>
 			<Flex>
 				<TextContent>
-					<Text component="h1">Your notebook servers</Text>
+					<Text component="h1">Your notebooks </Text>
 				</TextContent>
-				{Object.keys(userServers).length !== 0 ? (<Button variant="link" icon={<PlusCircleIcon />} component={props => <NavLink {...props} exact={true} to={normalizeRoute("/new-notebook")}/>}>
+				{publicNotebooks.length !== 0 ? (<Button variant="link" icon={<PlusCircleIcon />} component={props => <NavLink {...props} exact={true} to={normalizeRoute("/new-notebook")}/>}>
 					New server
 				</Button>) : null}
 			</Flex>
@@ -64,10 +63,9 @@ const ServerPanel: React.FunctionComponent = function(props) {
 		</PageSection>
 		<PageSection> 
 			{/* TODO: add loading status here */}
-			{Object.keys(userServers).length !== 0 ? 
-				<ServerCardList 
-					servers={Object.values(userServers) }
-					profileList={userModel.profile_list}
+			{publicNotebooks.length !== 0 ? 
+				<NotebookCardList 
+					servers={Object.values(publicNotebooks) }
 					/> : <WelcomeNewServer />}
 		</PageSection>
 	</div>
@@ -75,4 +73,4 @@ const ServerPanel: React.FunctionComponent = function(props) {
 	)
 }
 
-export { ServerPanel };
+export { NotebookPanel };

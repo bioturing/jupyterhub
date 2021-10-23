@@ -13,11 +13,15 @@ data_dir = os.environ.get("DATA_DIR", "./notebook-repo")
 albums = [
     {
         "category": "RNA-Velocity",
+        "description": "scVelo is a scalable toolkit for RNA velocity analysis in single cells, based on Bergen et al. (Nature Biotech, 2020)." + 
+                       "This is the DentateGyrus notebook that reproduces the analysis from the paper", 
+        "display_name": "scVelo - Bergen et al. (Nature Biotech, 2020)",
         "name": "DentateGyrus",
         "filename": "velocyto/DentateGyrus.ipynb",
         "id": 1,
         "format": "IPython",
         "env_filename": "velocyto/environment.yaml",
+        "tools": ["scvelo"]
     },	
 ]
 @app.get("/")
