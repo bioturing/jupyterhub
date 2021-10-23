@@ -5,6 +5,18 @@ const { stylePaths } = require("./stylePaths");
 const HOST = process.env.HOST || "localhost";
 const PORT = process.env.PORT || "9000";
 const express = require("express");
+const cors = require('cors');
+
+var allowlist = ['https://jupyter-dev.bioturing.com']
+var corsOptionsDelegate = function (req, callback) {
+  var corsOptions;
+  if (allowlist.indexOf(req.header('Origin')) !== -1) {
+    corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
+  } else {
+    corsOptions = { origin: false } // disable CORS for this request
+  }
+  callback(null, corsOptions) // callback expects two parameters: error and options
+}
 
 module.exports = merge(common('development'), {
   mode: "development",
@@ -95,7 +107,7 @@ module.exports = merge(common('development'), {
           "id": 1,
           "format": "IPython",
           "env_filename": "velocyto/environment.yaml",
-          "tools": ["scvelo"]
+          "tools": ["scvelo", "numpy"]
       },	
   ]
 		const spawner_progress = {"data": {
@@ -107,7 +119,7 @@ module.exports = merge(common('development'), {
 	}};
       app.use(express.json());
 
-      app.get("/nbk/", (req, res) => {
+      app.get("/nbk/", cors(corsOptionsDelegate), (req, res) => {
         res.status(200).send(JSON.stringify(nb_data))
       })
 

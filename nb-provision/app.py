@@ -25,15 +25,21 @@ nb_apiserver = os.environ.get("NOTEBOOKREPO_SERVER", None)
 logger.remove()
 logger.add(sys.stdout, colorize=True, format="<green>{time:HH:mm:ss}</green> | APP-{level} | <level>{message}</level>")
 
-app = FastAPI()
 assert (token and nb_apiserver)
 
-engine = create_engine('sqlite:///nb-provision.db', connect_args={'check_same_thread': False})
+dbfile = f"{os.environ['HOME']}/.nb-provision.db"
+engine = create_engine(f'sqlite:///{dbfile}', connect_args={'check_same_thread': False})
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+app = FastAPI()
+
+for prov in session.query(NBProvisionRecord).all():
+    prov.progress = 100
+
+session.commit()
 
 # TODO: bring this to utils
 def sanity_check(file, http_headers):
@@ -43,11 +49,14 @@ def sanity_check(file, http_headers):
 
 # TODO: Notebook as a class and provision as a function
 def provision(resource, uid, useremail):
+
+    # TODO: get the checksum of resource, then only provision one
     prov_orm = NBProvisionRecord(uid=str(uid), useremail=useremail, status="Initializing")
     session.add(prov_orm)
     session.commit()
 
     def log_update_orm(msg: str, prog : int = 0 ):
+        # TODO: update all provisioning jobs that has the same checksum
         prov_orm.logmess = msg
         if prog:
             prov_orm.progress = prog
@@ -112,9 +121,13 @@ async def websocket_endpoint(
     logger.info(f"Connected: {uid}")
 
     while True:
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.5)
         prov_orm = session.query(NBProvisionRecord).filter_by(uid=uid).all()
-        if not prov_orm or prov_orm[0].progress == 100:
+        if not prov_orm:
+            await websocket.close()
+            return
+        elif prov_orm[0].progress == 100:
+            await websocket.send_json(prov_orm[0].to_dict())
             await websocket.close()
             session.commit()
             return

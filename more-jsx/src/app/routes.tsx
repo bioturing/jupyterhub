@@ -66,8 +66,8 @@ const routes: AppRouteConfig[] = [
     exact: true,
     isAsync: true,
     label: 'Spawning',
-    path: normalizeRoute("/spawn/:user/:serverName"),
-    title: normalizeTitle("Notebook server spawning"),
+    path: normalizeRoute("/notebook-spawn/:user/:id"),
+    title: normalizeTitle("Notebook spawning"),
 		hideFromNav: true
   },
 	{

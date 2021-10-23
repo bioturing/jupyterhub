@@ -55,9 +55,9 @@ const NotebookPanel: React.FunctionComponent = function(props) {
 				<TextContent>
 					<Text component="h1">Your notebooks </Text>
 				</TextContent>
-				{publicNotebooks.length !== 0 ? (<Button variant="link" icon={<PlusCircleIcon />} component={props => <NavLink {...props} exact={true} to={normalizeRoute("/new-notebook")}/>}>
+				{/* {publicNotebooks.length !== 0 ? (<Button variant="link" icon={<PlusCircleIcon />} component={props => <NavLink {...props} exact={true} to={normalizeRoute("/new-notebook")}/>}>
 					New server
-				</Button>) : null}
+				</Button>) : null} */}
 			</Flex>
 			
 		</PageSection>

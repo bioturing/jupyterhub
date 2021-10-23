@@ -87,6 +87,7 @@
     "@patternfly/react-styles": "^4.10.11",
     "@storybook/builder-webpack5": "^6.2.9",
     "axios": "^0.22.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

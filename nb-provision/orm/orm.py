@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 
+import os
+
 Base = declarative_base()
 
 class NBProvisionRecord(Base):
@@ -26,5 +28,6 @@ class NBProvisionRecord(Base):
             "envname" : self.envname
         }
 
-engine = create_engine('sqlite:///nb-provision.db', connect_args={'check_same_thread': False})
+dbfile = f"{os.environ['HOME']}/.nb-provision.db"
+engine = create_engine(f'sqlite:///{dbfile}', connect_args={'check_same_thread': False})
 Base.metadata.create_all(engine)

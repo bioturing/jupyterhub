@@ -54,7 +54,7 @@ const NotebookCard = (props) => {
           <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
             <FlexItem><Text>{description}</Text></FlexItem>
             <FlexItem><b>Tools</b> {tools.map(
-                (name) => <Label variant="outline" color="grey" >
+                (name) => <Label variant="outline" color="grey" style={{'margin-right': '0.2rem'}}>
                 {name}
               </Label>)}
             </FlexItem>
