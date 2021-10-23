@@ -1,0 +1,10 @@
+auto_activate_base: false
+anaconda_upload: true
+add_anaconda_token: true
+restore_free_channel: false
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+pkgs_dirs:
+    - /project_envs/.pkg_cached 
