@@ -20,6 +20,7 @@ c.Authenticator.admin_users = {'tan@bioturing.com'}
 
 c.Spawner.args = ['--NotebookApp.allow_origin=*']
 c.Spawner.default_url = '/tree'
+c.BioTuringKubeSpawner.notebookrepo_server = "http://192.168.10.145:9999"
 
 c.JupyterHub.allow_named_servers = False
 c.JupyterHub.tornado_settings = {

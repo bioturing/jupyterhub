@@ -238,8 +238,11 @@ if tolerations:
 storage_type = get_config("singleuser.storage.type")
 if storage_type == "dynamic":
     pvc_name_template = get_config("singleuser.storage.dynamic.pvcNameTemplate")
+    conda_pvc_name_template = get_config("singleuser.storage.dynamic.condaPvcNameTemplate")
     c.BioTuringKubeSpawner.pvc_name_template = pvc_name_template
+    c.BioTuringKubeSpawner.conda_env_pvc_name_template = conda_pvc_name_template
     volume_name_template = get_config("singleuser.storage.dynamic.volumeNameTemplate")
+    conda_volume_name_template = get_config("singleuser.storage.dynamic.condaVolumeNameTemplate")
     c.BioTuringKubeSpawner.storage_pvc_ensure = True
     set_config_if_not_none(
         c.BioTuringKubeSpawner, "storage_class", "singleuser.storage.dynamic.storageClass"
@@ -255,17 +258,26 @@ if storage_type == "dynamic":
 
     # Add volumes to singleuser pods
     c.BioTuringKubeSpawner.volumes = [
+         {
+             "name": volume_name_template,
+             "persistentVolumeClaim": {"claimName": pvc_name_template},
+         },
         {
-            "name": volume_name_template,
-            "persistentVolumeClaim": {"claimName": pvc_name_template},
+            "name": conda_volume_name_template,
+            "persistentVolumeClaim": {"claimName": conda_pvc_name_template},
         }
     ]
     c.BioTuringKubeSpawner.volume_mounts = [
         {
             "mountPath": get_config("singleuser.storage.homeMountPath"),
-            "name": volume_name_template,
-        }
+            "name": volume_name_template
+        },
+         {
+             "mountPath": "/project_envs",
+             "name": conda_volume_name_template,
+         }
     ]
+# WARN and TODO: (Tan) How to handle conda env mount for static storage type?
 elif storage_type == "static":
     pvc_claim_name = get_config("singleuser.storage.static.pvcName")
     c.BioTuringKubeSpawner.volumes = [

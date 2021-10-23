@@ -65,7 +65,7 @@ hub:
         - ReadWriteOnce
       storage: 1Gi
       subPath:
-      storageClassName: longhorn
+      storageClassName: openebs-local
     url:
     password:
   labels: {}
@@ -370,6 +370,14 @@ singleuser:
   extraContainers:
     - name: nb-provision
       image: bioturing/nb-provision:latest
+      lifecycle:
+        postStart:
+          exec:
+            command:
+              ["/bin/sh", "-c", "cp /opt/condarc /home/jovyan/.condarc"]
+      securityContext:
+        privileged: true
+        allowPrivilegeEscalation: true
       ports:
         - containerPort: 8000
       env:
@@ -391,9 +399,11 @@ singleuser:
     capacity: 10Gi
     homeMountPath: /home/jovyan
     dynamic:
-      storageClass: longhorn
+      storageClass: openebs-local
       pvcNameTemplate: claim-{username}{servername}
       volumeNameTemplate: volume-{username}{servername}
+      condaPvcNameTemplate: claim-{username}{servername}-conda
+      condaVolumeNameTemplate: conda-volume-{username}{servername}
       storageAccessModes: [ReadWriteOnce]
   image:
     name: jupyter/datascience-notebook

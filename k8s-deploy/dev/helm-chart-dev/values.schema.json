@@ -1558,6 +1558,12 @@
                     "null"
                   ]
                 },
+                "condaPvcNameTemplate": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
                 "storageAccessModes": {
                   "type": "array",
                   "items": {
@@ -1574,6 +1580,12 @@
                   ]
                 },
                 "volumeNameTemplate": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "condaVolumeNameTemplate": {
                   "type": [
                     "string",
                     "null"

@@ -5,9 +5,12 @@ import requests
 import tempfile
 import sys
 import uuid
+import asyncio
+import json
 
 from loguru import logger
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from typing import Optional
+from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket
 from urllib.request import urlretrieve
 
 from sqlalchemy import create_engine
@@ -25,7 +28,7 @@ logger.add(sys.stdout, colorize=True, format="<green>{time:HH:mm:ss}</green> | A
 app = FastAPI()
 assert (token and nb_apiserver)
 
-engine = create_engine('sqlite:///nb-provision.db')
+engine = create_engine('sqlite:///nb-provision.db', connect_args={'check_same_thread': False})
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -94,10 +97,28 @@ def provision(resource, uid, useremail):
 
 @app.get("/jupyterhub/user/{useremail}/nbapi/provision-pending/{uid}")
 async def get_provision_status(uid: str):
-    prov_orm = session.query(NBProvisionRecord).filter_by(uid=uid).one()
+    prov_orm = session.query(NBProvisionRecord).filter_by(uid=uid).all()
     if not prov_orm:
         raise HTTPException(status_code=404, detail = "Not found")
-    return prov_orm.to_dict()
+    return prov_orm[0].to_dict()
+
+@app.websocket("/jupyterhub/user/{useremail}/nbapi/provision-pending/{uid}")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    uid: str,
+    # cookie_or_token: str = Depends(get_cookie_or_token),
+):
+    await websocket.accept()
+    logger.info(f"Connected: {uid}")
+
+    while True:
+        await asyncio.sleep(0.1)
+        prov_orm = session.query(NBProvisionRecord).filter_by(uid=uid).all()
+        if not prov_orm or prov_orm[0].progress == 100:
+            await websocket.close()
+            session.commit()
+            return
+        await websocket.send_json(prov_orm[0].to_dict())
 
 @app.post("/jupyterhub/user/{useremail}/nbapi/provision", status_code = 202)
 async def nb_provision(nb_id: int, useremail: str, background_tasks : BackgroundTasks):

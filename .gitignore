@@ -40,3 +40,4 @@ key.crt
 key.key
 share/jupyterhub/static/user/
 jsx/yarn.lock
+*.loom

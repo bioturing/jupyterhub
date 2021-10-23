@@ -1,9 +1,4 @@
-FROM python:3
-
-COPY requirements.txt requirements.txt
-
-RUN pip3 install -r requirements.txt 
-
+FROM continuumio/miniconda3:4.10.3
 
 ARG NB_USER=jovyan
 ARG NB_UID=1000
@@ -16,11 +11,19 @@ RUN adduser --disabled-password \
     --force-badname \
     ${NB_USER}
 
+COPY environment.yaml environment.yaml
+RUN conda env create --name nb_provision -f environment.yaml
+
 COPY . ./app
+
+COPY condarc /opt/condarc
+RUN chown jovyan:jovyan /opt/condarc
 RUN chown -R jovyan:jovyan /app
+RUN chown  jovyan:jovyan /opt/conda/envs/nb_provision
+
+USER jovyan
 
 EXPOSE 8000
-USER jovyan
 WORKDIR /app
 
-CMD ["uvicorn", "app:app", "--reload", "--host", "0.0.0.0"]
+CMD ["conda", "run", "--no-capture-output", "-n", "nb_provision", "uvicorn", "app:app", "--reload", "--host", "0.0.0.0"]

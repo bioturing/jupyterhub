@@ -58,33 +58,43 @@ def async_stream_process_stdout_wrapper(ps, stdout_file, ps_name = ""):
         ps_logger.join()
 
 def create_conda_env(envfile, envname, stdout_file=None):
-    if os.path.exists(f"/opt/conda/envs/{envname}"):
-        logger.info(f"Environment {envname} exists")
-        return True
-    ps = subprocess.Popen(["mamba",
-                            "env",
-                            "create",
-                            "-f",
-                            f"{envfile}",
-                            "--prefix",
-                            f"/opt/conda/envs/{envname}" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    async_stream_process_stdout_wrapper(ps, stdout_file, ps_name = "create_conda_env")
-    ps.wait()
+    try:
+        if os.path.exists(f"/project_envs/{envname}"):
+            logger.info(f"Environment {envname} exists")
+            return True
+        ps = subprocess.Popen(["mamba",
+                                "env",
+                                "create",
+                                "-f",
+                                f"{envfile}",
+                                "--prefix",
+                                f"/project_envs/{envname}" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        async_stream_process_stdout_wrapper(ps, stdout_file, ps_name = "create_conda_env")
+        logger.info(f"conda env args:{repr(ps.args)}")
+        ps.wait()
+    except Exception as e:
+        logger.info(f"Exception raised: {repr(e)}")
+        return False
     return ps.returncode == 0
 
 
 def install_kernelspec_python(envname, stdout_file=None):
-    ps = subprocess.Popen([f"/opt/conda/envs/{envname}/bin/python",
-                            "-m",
-                            "ipykernel",
-                            "install",
-                            "--user",
-                            "--name",
-                            f"{python_kernel_naming(envname)}",
-                            "--display-name",
-                            f"{python_kernel_naming(envname)}" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    async_stream_process_stdout_wrapper(ps, stdout_file, ps_name = "install_kernelspec_python")
-    ps.wait()
+    try:
+        ps = subprocess.Popen([f"/project_envs/{envname}/bin/python",
+                                "-m",
+                                "ipykernel",
+                                "install",
+                                "--user",
+                                "--name",
+                                f"{python_kernel_naming(envname)}",
+                                "--display-name",
+                                f"{python_kernel_naming(envname)}" ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        async_stream_process_stdout_wrapper(ps, stdout_file, ps_name = "install_kernelspec_python")
+        logger.info(f"ipykernel args:{repr(ps.args)}")
+        ps.wait()
+    except Exception as e:
+        logger.info(f"Exception raised: {repr(e)}")
+        return False
     return ps.returncode == 0
 
 def patching_kernelname_ipynb(nbfile, envname, lang="python"):

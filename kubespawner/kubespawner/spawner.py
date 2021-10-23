@@ -10,6 +10,7 @@ import os
 import string
 import sys
 import warnings
+import yaml
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from functools import partial
@@ -2928,20 +2929,59 @@ class BioTuringKubeSpawner(KubeSpawner):
     spawned by a user will have its own KubeSpawner instance.
     Customized by BioTuring Team.
     """
-    albumAPIHost = Unicode(
-        "http://127.0.0.1:8000",
-        help="Notebook Album server to get the provisioned notebook",	
-    ).tag(config=True)
 
-    notebookrepo_id = Unicode(
-        "-1",
-        help = "Id to get the notebook from notebook server"
+    conda_env_storage_capacity = Unicode(
+        '20G',
+        config=True,
+        allow_none=True,
+        help="""
+        The amount of storage space to request from the volume that the pvc will
+        mount to. This amount will be the amount of storage space the user has
+        to work with on their notebook. If left blank, the kubespawner will not
+        create a pvc for the pod.
+
+        This will be added to the `resources: requests: storage:` in the k8s pod spec.
+
+        See `the Kubernetes documentation <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims>`__
+
+        for more information on how storage works.
+
+        Quantities can be represented externally as unadorned integers, or as fixed-point
+        integers with one of these SI suffices (`E, P, T, G, M, K, m`) or their power-of-two
+        equivalents (`Ei, Pi, Ti, Gi, Mi, Ki`). For example, the following represent roughly
+        the same value: `128974848`, `129e6`, `129M`, `123Mi`.
+        """,
+    )
+    conda_env_pvc_name_template = Unicode(
+        'claim-{username}{servername}-conda',
+        config=True,
+        help="""
+        Template to use to form the name of user's pvc.
+
+        `{username}`, `{userid}`, `{servername}`, `{hubnamespace}`,
+        `{unescaped_username}`, and `{unescaped_servername}` will be expanded if
+        found within strings of this configuration. The username and servername
+        come escaped to follow the [DNS label
+        standard](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names).
+
+        Trailing `-` characters are stripped for safe handling of empty server names (user default servers).
+
+        This must be unique within the namespace the pvc are being spawned
+        in, so if you are running multiple jupyterhubs spawning in the
+        same namespace, consider setting this to be something more unique.
+
+        .. versionchanged:: 0.12
+            `--` delimiter added to the template,
+            where it was implicitly added to the `servername` field before.
+            Additionally, `username--servername` delimiter was `-` instead of `--`,
+            allowing collisions in certain circumstances.
+        """,
     )
 
     notebookrepo_server = Unicode(
-        "",
+        "http://127.0.0.1:8000",
         help = "Where to get the notebook content"
-    )
+    ).tag(config=True)
 
     notebookrepo_server_token = Unicode(
         "",
@@ -2956,31 +2996,6 @@ class BioTuringKubeSpawner(KubeSpawner):
     def get_nbprovision_apiurl(self):
         return f"http://{self.server.ip}:{self.nbprovision_port}"
 
-    def _options_from_form(self, formdata):
-        """get the option selected by the user on the form
-
-        Get more options other than "profile"
-
-        Args:
-            formdata: user selection returned by the form
-
-        Returns:
-            user_options (dict): the selected profile in the user_options form,
-                e.g. ``{"profile": "cpus-8"}``
-            notebook_profile (dict): the notebook profile for provisioning
-            
-        """
-        # legacy of the super class
-        profile = formdata.get('profile', [None])[0]
-
-        for k, v in formdata.items():
-            formdata[k] = v[0]
-        formdata['profile'] = profile
-        self.notebookrepo_id = formdata.get('notebookrepo_id', "-1")
-        self.notebookrepo_server = formdata.get('notebookrepo_server', "")
-        self.notebookrepo_server_token = formdata.get('notebookrepo_server_token', "")
-        return formdata
-
     def get_env(self):
         """Return the environment dict to use for the Spawner.
 
@@ -2991,14 +3006,184 @@ class BioTuringKubeSpawner(KubeSpawner):
         env = super().get_env()
 
         env["NOTEBOOKREPO_SERVER"] = self.notebookrepo_server
-        env["NOTEBOOKREPO_ID"] = self.notebookrepo_id
-        env["NOTEBOOKREPO_API_TOKEN"] = self.notebookrepo_server_token
         
         return env 
-    @staticmethod
-    def get_profile_list():
+
+    def get_conda_env_pvc_manifest(self):
         """
-        Called by the user API. To get a list of profiles then 
-        render at the client side
+        Make a pvc conda env manifest that will spawn current user's conda env pvc.
         """
-        return super().profile_list
+        labels = self._build_common_labels(self._expand_all(self.storage_extra_labels))
+        labels.update({'component': 'singleuser-storage-conda-env'})
+
+        annotations = self._build_common_annotations({})
+
+        storage_selector = self._expand_all(self.storage_selector)
+
+        self.conda_pvc_name = self._expand_user_properties(self.conda_env_pvc_name_template)
+
+        return make_pvc(
+            name=self.conda_pvc_name,
+            storage_class=self.storage_class,
+            access_modes=self.storage_access_modes,
+            selector=storage_selector,
+            storage=self.conda_env_storage_capacity,
+            labels=labels,
+            annotations=annotations,
+        )
+
+    async def _start(self):
+        """Start the user's pod"""
+
+        # load user options (including profile)
+        await self.load_user_options()
+
+        # If we have user_namespaces enabled, create the namespace.
+        #  It's fine if it already exists.
+        if self.enable_user_namespaces:
+            await self._ensure_namespace()
+
+        # record latest event so we don't include old
+        # events from previous pods in self.events
+        # track by order and name instead of uid
+        # so we get events like deletion of a previously stale
+        # pod if it's part of this spawn process
+        events = self.events
+        if events:
+            self._last_event = events[-1]["metadata"]["uid"]
+
+        if self.storage_pvc_ensure:
+            pvc = self.get_pvc_manifest()
+
+            # If there's a timeout, just let it propagate
+            await exponential_backoff(
+                partial(
+                    self._make_create_pvc_request, pvc, self.k8s_api_request_timeout
+                ),
+                f'Could not create PVC {self.pvc_name}',
+                # Each req should be given k8s_api_request_timeout seconds.
+                timeout=self.k8s_api_request_retry_timeout,
+            )
+
+            conda_pvc = self.get_conda_env_pvc_manifest()
+            # If there's a timeout, just let it propagate
+            await exponential_backoff(
+                partial(
+                    self._make_create_pvc_request, conda_pvc, self.k8s_api_request_timeout
+                ),
+                f'Could not create conda PVC {self.conda_pvc_name}',
+                # Each req should be given k8s_api_request_timeout seconds.
+                timeout=self.k8s_api_request_retry_timeout,
+            )
+
+
+        # If we run into a 409 Conflict error, it means a pod with the
+        # same name already exists. We stop it, wait for it to stop, and
+        # try again. We try 4 times, and if it still fails we give up.
+        pod = await self.get_pod_manifest()
+        if self.modify_pod_hook:
+            pod = await gen.maybe_future(self.modify_pod_hook(self, pod))
+
+        ref_key = "{}/{}".format(self.namespace, self.pod_name)
+        # If there's a timeout, just let it propagate
+        await exponential_backoff(
+            partial(self._make_create_pod_request, pod, self.k8s_api_request_timeout),
+            f'Could not create pod {ref_key}',
+            timeout=self.k8s_api_request_retry_timeout,
+        )
+
+        if self.internal_ssl:
+            try:
+                # wait for pod to have uid,
+                # required for creating owner reference
+                await exponential_backoff(
+                    lambda: self.pod_has_uid(
+                        self.pod_reflector.pods.get(ref_key, None)
+                    ),
+                    f"pod/{ref_key} does not have a uid!",
+                )
+
+                pod = self.pod_reflector.pods[ref_key]
+                owner_reference = make_owner_reference(
+                    self.pod_name, pod["metadata"]["uid"]
+                )
+
+                # internal ssl, create secret object
+                secret_manifest = self.get_secret_manifest(owner_reference)
+                await exponential_backoff(
+                    partial(
+                        self._ensure_not_exists, "secret", secret_manifest.metadata.name
+                    ),
+                    f"Failed to delete secret {secret_manifest.metadata.name}",
+                )
+                await exponential_backoff(
+                    partial(
+                        self._make_create_resource_request, "secret", secret_manifest
+                    ),
+                    f"Failed to create secret {secret_manifest.metadata.name}",
+                )
+
+                service_manifest = self.get_service_manifest(owner_reference)
+                await exponential_backoff(
+                    partial(
+                        self._ensure_not_exists,
+                        "service",
+                        service_manifest.metadata.name,
+                    ),
+                    f"Failed to delete service {service_manifest.metadata.name}",
+                )
+                await exponential_backoff(
+                    partial(
+                        self._make_create_resource_request, "service", service_manifest
+                    ),
+                    f"Failed to create service {service_manifest.metadata.name}",
+                )
+            except Exception:
+                # cleanup on failure and re-raise
+                await self.stop(True)
+                raise
+
+        # we need a timeout here even though start itself has a timeout
+        # in order for this coroutine to finish at some point.
+        # using the same start_timeout here
+        # essentially ensures that this timeout should never propagate up
+        # because the handler will have stopped waiting after
+        # start_timeout, starting from a slightly earlier point.
+        try:
+            await exponential_backoff(
+                lambda: self.is_pod_running(self.pod_reflector.pods.get(ref_key, None)),
+                'pod %s did not start in %s seconds!' % (ref_key, self.start_timeout),
+                timeout=self.start_timeout,
+            )
+        except TimeoutError:
+            if ref_key not in self.pod_reflector.pods:
+                # if pod never showed up at all,
+                # restart the pod reflector which may have become disconnected.
+                self.log.error(
+                    "Pod %s never showed up in reflector, restarting pod reflector",
+                    ref_key,
+                )
+                self.log.error("Pods: {}".format(self.pod_reflector.pods))
+                self._start_watching_pods(replace=True)
+            raise
+
+        pod = self.pod_reflector.pods[ref_key]
+        self.pod_id = pod["metadata"]["uid"]
+        if self.event_reflector:
+            self.log.debug(
+                'pod %s events before launch: %s',
+                ref_key,
+                "\n".join(
+                    [
+                        "%s [%s] %s"
+                        % (
+                            event["lastTimestamp"] or event["eventTime"],
+                            event["type"],
+                            event["message"],
+                        )
+                        for event in self.events
+                    ]
+                ),
+            )
+
+        return self._get_pod_url(pod)

@@ -26,5 +26,5 @@ class NBProvisionRecord(Base):
             "envname" : self.envname
         }
 
-engine = create_engine('sqlite:///nb-provision.db')
+engine = create_engine('sqlite:///nb-provision.db', connect_args={'check_same_thread': False})
 Base.metadata.create_all(engine)
