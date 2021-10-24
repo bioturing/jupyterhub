@@ -12,7 +12,7 @@ import {
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import ArrowRightIcon from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
 import NotebookCardList from './NotebookCard';
-import {getPublicNotebooks} from '../../services/users';
+import {getPublicNotebooks, getWhoAmI} from '../../services/users';
 import { NavLink } from 'react-router-dom';
 import {normalizeRoute} from '../routes';
 
@@ -36,18 +36,27 @@ const WelcomeNewServer: React.FunctionComponent = function(props) {
 }
 
 const NotebookPanel: React.FunctionComponent = function(props) {
-	const [userModel, setuserModel] = useState({profile_list:[]});
+	const [user, setUser] = useState('nobody');
+	useEffect(() => {
+		getWhoAmI()
+			.then(res => {
+				setUser(res.name);
+			})
+	}, [])
+
 	const [publicNotebooks, setPublicNotebooks] = useState([]);
 	useEffect(() => {
 		let mounted = true;
-		getPublicNotebooks()
-		  .then(model => {
-		    if(mounted) {
-			  setPublicNotebooks(model);
-		    }
-		  })
+		if (user !== 'nobody') {
+			getPublicNotebooks()
+			.then(model => {
+				if(mounted) {
+				setPublicNotebooks(model);
+				}
+			})
+		}
 		return () => mounted = false;
-	      }, [])
+	      }, [user]);
 	return (
 	<div>
 		<PageSection variant={PageSectionVariants.light}>
@@ -66,6 +75,7 @@ const NotebookPanel: React.FunctionComponent = function(props) {
 			{publicNotebooks.length !== 0 ? 
 				<NotebookCardList 
 					servers={Object.values(publicNotebooks) }
+					user={user}
 					/> : <WelcomeNewServer />}
 		</PageSection>
 	</div>

@@ -3,11 +3,12 @@ import { Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { accessibleRouteChangeHandler } from '@app/utils/utils';
 import { NotebookPanel } from '@app/NotebookPanel/NotebookPanel';
 import { NewServer} from '@app/NewServer/NewServer';
-import { Support } from '@app/Support/Support';
 import { Spawning } from '@app/Spawner/Spawning';
 import { NotFound } from '@app/NotFound/NotFound';
 import { useDocumentTitle } from '@app/utils/useDocumentTitle';
 import { LastLocationProvider, useLastLocation } from 'react-router-last-location';
+
+import {normalizeRoute} from '../services/utils'
 
 let routeFocusTimer: number;
 export interface IAppRoute {
@@ -30,9 +31,7 @@ export interface IAppRouteGroup {
 
 export type AppRouteConfig = IAppRoute | IAppRouteGroup;
 
-const normalizeRoute = function(route) {
-	return `${process.env.BASE_URL}hub/home${route}`;
-}
+
 
 const normalizeTitle = function(title) {
 	return `BioTuring Data Science Platform | ${title}`;

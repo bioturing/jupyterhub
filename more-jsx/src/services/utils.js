@@ -18,9 +18,14 @@ const getNotebookUrl = function(user, nbFileName, prefix) {
 	return `${hubPrefix}user/${user}/notebooks/${nbFileName}`
 }
 
+const normalizeRoute = function(route) {
+	return `${process.env.BASE_URL}hub/home${route}`;
+}
+
 module.exports = {
 	getAPIUrl,
 	getUserUrl,
 	getNotebookPendingEndpoint,
-	getNotebookUrl
+	getNotebookUrl,
+	normalizeRoute
 }

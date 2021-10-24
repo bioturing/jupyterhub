@@ -4,7 +4,22 @@ from typing import Optional
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import FileResponse
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 app = FastAPI()
+
+origins = [
+    "https://jupyter-dev.bioturing.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 hostname = os.environ.get("API_HOSTNAME", "http://127.0.0.1:8001")
 data_dir = os.environ.get("DATA_DIR", "./notebook-repo")
@@ -18,7 +33,7 @@ albums = [
         "display_name": "scVelo - Bergen et al. (Nature Biotech, 2020)",
         "name": "DentateGyrus",
         "filename": "velocyto/DentateGyrus.ipynb",
-        "id": 1,
+        "id": 0,
         "format": "IPython",
         "env_filename": "velocyto/environment.yaml",
         "tools": ["scvelo"]

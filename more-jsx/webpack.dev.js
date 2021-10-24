@@ -7,7 +7,7 @@ const PORT = process.env.PORT || "9000";
 const express = require("express");
 const cors = require('cors');
 
-var allowlist = ['https://jupyter-dev.bioturing.com']
+var allowlist = ['https://jupyter-dev.bioturing.com', 'http://127.0.0.1:9000']
 var corsOptionsDelegate = function (req, callback) {
   var corsOptions;
   if (allowlist.indexOf(req.header('Origin')) !== -1) {
@@ -104,7 +104,7 @@ module.exports = merge(common('development'), {
           "display_name": "scVelo - Bergen et al. (Nature Biotech, 2020)",
           "name": "DentateGyrus",
           "filename": "velocyto/DentateGyrus.ipynb",
-          "id": 1,
+          "id": 0,
           "format": "IPython",
           "env_filename": "velocyto/environment.yaml",
           "tools": ["scvelo", "numpy"]
