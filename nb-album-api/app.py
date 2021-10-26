@@ -1,4 +1,5 @@
 import os
+import json
 
 from typing import Optional
 from fastapi import FastAPI, Request, HTTPException
@@ -22,23 +23,11 @@ app.add_middleware(
 )
 
 hostname = os.environ.get("API_HOSTNAME", "http://127.0.0.1:8001")
-data_dir = os.environ.get("DATA_DIR", "./notebook-repo")
+data_dir = "/app/notebooks" 
 
 # TODO: add database to store notebook here
-albums = [
-    {
-        "category": "RNA-Velocity",
-        "description": "scVelo is a scalable toolkit for RNA velocity analysis in single cells, based on Bergen et al. (Nature Biotech, 2020)." + 
-                       "This is the DentateGyrus notebook that reproduces the analysis from the paper", 
-        "display_name": "scVelo - Bergen et al. (Nature Biotech, 2020)",
-        "name": "DentateGyrus",
-        "filename": "velocyto/DentateGyrus.ipynb",
-        "id": 0,
-        "format": "IPython",
-        "env_filename": "velocyto/environment.yaml",
-        "tools": ["scvelo"]
-    },	
-]
+albums = json.load(open(f"{data_dir}/notebook-index.json"))
+
 @app.get("/")
 def read_root():
     return albums
