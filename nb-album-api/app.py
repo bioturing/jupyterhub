@@ -1,18 +1,18 @@
 import os
 import json
 
-from typing import Optional
-from fastapi import FastAPI, Request, HTTPException
+from typing import List, Optional
+from fastapi import FastAPI, Request, HTTPException, Depends, Query
 from fastapi.responses import FileResponse
-
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 
+from setting import NB_DB_DIR
+from orm import NotebookRecordCreate, NotebookRecordRead, NotebookRecord, NotebookCategory, sqlite_url
+
+from sqlmodel import Session, SQLModel, create_engine, select
 
 app = FastAPI()
-
-origins = [
-    "https://jupyter-dev.bioturing.com",
-]
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,32 +22,60 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-hostname = os.environ.get("API_HOSTNAME", "http://127.0.0.1:8001")
-data_dir = "/app/notebooks" 
+connect_args = {"check_same_thread": False}
+engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
 
-# TODO: add database to store notebook here
-albums = json.load(open(f"{data_dir}/notebook-index.json"))
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
 
-@app.get("/")
-def read_root():
-    return albums
+def get_session():
+    with Session(engine) as session:
+        yield session
 
-@app.get("/download/{filename:path}")
-def download_notebook(filename: str):
-    # TODO: check API token here
-    filepath = os.path.join(data_dir, filename)
-    if os.path.exists(filepath):
-        return FileResponse(filepath)
-    else:
-        raise HTTPException(status_code=404, detail="Item not found")
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
-@app.post("/get_notebooks/")
-def get_item(resource_type: str, id: int, token: str, request: Request):
-    # TODO check api token
-    filename = albums[id]["filename"]
-    env_filename = albums[id]["env_filename"]
-    return {
-        "nb_download_link": f"{hostname}/download/{filename}",
-        "env_download_link": f"{hostname}/download/{env_filename}", 
-    }
+@app.post("/notebooks/", response_model=NotebookRecordRead)
+def create_notebook(*, session: Session = Depends(get_session), nb: NotebookRecordCreate):
+    db_notebook = NotebookRecord.from_orm(nb)
+    db_notebook.time_added = datetime.now()
+    session.add(db_notebook)
+    session.commit()
+    session.refresh(db_notebook)
+    return db_notebook
 
+@app.post("/categories/", response_model=NotebookCategory)
+def create_category(*, session: Session = Depends(get_session), cat : NotebookCategory):
+    db_category = NotebookCategory.from_orm(cat)
+    session.add(db_category)
+    session.commit()
+    session.refresh(db_category)
+    return db_category
+
+@app.get("/notebooks/", response_model=List[NotebookRecordRead])
+def read_notebooks(
+    *,
+    session: Session = Depends(get_session),
+    offset: int = 0,
+    limit: int = Query(default=100, lte=100),
+):
+    notebooks = session.exec(select(NotebookRecord).offset(offset).limit(limit)).all()
+    return notebooks
+
+@app.get("/notebooks/{notebook_id}", response_model=NotebookRecordRead)
+def read_notebook(*, session: Session = Depends(get_session), notebook_id: int):
+    notebook = session.get(NotebookRecord, notebook_id)
+    if not notebook:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    return notebook
+
+@app.delete("/notebooks/{notebook_id}")
+def delete_notebook(*, session: Session = Depends(get_session), notebook_id: int):
+
+    notebook = session.get(NotebookRecord, notebook_id)
+    if not notebook:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    session.delete(notebook)
+    session.commit()
+    return {"ok": True}
