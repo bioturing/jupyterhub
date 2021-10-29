@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
-docker run  -d -v $PWD/notebook-repo:/app/notebooks/ -e API_HOSTNAME="http://192.168.10.145:9999" \
-    -p 9999:8000 nb-album
+export APP_MODULE=${APP_MODULE-app.main:app}
+export HOST=${HOST:-0.0.0.0}
+export PORT=${PORT:-8001}
+
+exec uvicorn --reload --host $HOST --port $PORT "$APP_MODULE"
